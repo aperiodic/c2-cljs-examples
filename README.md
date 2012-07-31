@@ -1,6 +1,6 @@
 # c2-cljs-examples
 
-This clojurescript application foos your bars most bazzily.
+An attempt to rewrite the c2 examples in clojurescript.
 
 ## Usage
 
@@ -9,6 +9,6 @@ development server with `lein ring server`.
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2012 Dan Lidral-Porter
 
 Distributed under the Eclipse Public License, the same as Clojure.

@@ -1,8 +1,8 @@
 (defproject c2-cljs-examples "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "An attempt to rewrite c2's examples in clojurescript."
   :url "http://example.com/FIXME"
-  :license {:name "GNU Lesser General Public License"
-            :url "http://www.gnu.org/licenses/lgpl.html"}
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [com.keminglabs/c2 "0.2.0-SNAPSHOT"]
                  [compojure "1.0.4"]
