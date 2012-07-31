@@ -6,6 +6,7 @@
         [c2.maths :only [sin cos Tau extent]]
         [clojure.string :only [join]]))
 
+;; if this is commented out, then the alert actually fires
 (bind! "#content"
        [:p "This is meaningful content"])
 
