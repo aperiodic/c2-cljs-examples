@@ -5,9 +5,7 @@
             [c2.scale :as scale]
             [c2.svg :as svg]
             [singult.core :as singult])
-  (:use [c2.core :only [unify]]
-        [c2.maths :only [sin cos Tau extent]]
-        [clojure.string :only [join]]))
+  (:use [c2.maths :only [sin cos Tau extent]]))
 
 (def bins [:min :q5 :q10 :q25 :median :q75 :q90 :q95 :max])
 
@@ -34,17 +32,16 @@
                                "width:" width ";")}
         ;; aw yeah, inlining stylesheets
         [:style {:type "text/css"}
-         (join "\n" ["body {background-color: #222222;}"
-                     ".box {fill: #222222; stroke: white;}"
-                     "line {stroke: white;}"
-                     "line.range {stroke-dasharray: 5,5;}"
-                     ])]
+         (str "body {background-color: #222222;}"
+              ".box {fill: #222222; stroke: white;}"
+              "line {stroke: white;}"
+              "line.range {stroke-dasharray: 5,5")]
         ;; this works
         [:rect.box {:x 0.5, :y 0.5, :width box-width, :height box-width}]
         ;; i don't know why this doesn't (uncomment to see it blow up)
-        #_(unify (map-indexed vector data)
-                 (constantly
-                   [:rect.box {:x 0.5, :y 0.5
-                               :width box-width, :height box-width}]))]])))
+        #_(singult/unify
+          (map-indexed vector data)
+          (constantly [:rect.box {:x 0.5, :y 0.5
+                                  :width box-width, :height box-width}]))]])))
 
 (event/on-load boxplots)
