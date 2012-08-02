@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [com.keminglabs/c2 "0.2.0"]
                  [compojure "1.0.4"]
-                 [hiccup "1.0.0"]]
+                 [hiccup "1.0.0"]
+                 [com.keminglabs/singult "0.1.3"]]
   :plugins [[lein-cljsbuild "0.2.4"]
             [lein-ring "0.7.1"]]
   :ring {:handler c2-cljs-examples.routes/handler}
