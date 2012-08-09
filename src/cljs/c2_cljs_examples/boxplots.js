@@ -1,4 +1,4 @@
-(ns c2-cljs-examples.core
+(ns c2-cljs-examples.boxplots
   (:use-macros [c2.util :only [p pp bind!]])
   (:require [c2.core :as c2]
             [c2.event :as event]
