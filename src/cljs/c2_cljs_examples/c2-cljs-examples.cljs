@@ -1,11 +1,10 @@
 (ns c2-cljs-examples.core
   (:use-macros [c2.util :only [p pp bind!]])
-  (:require [c2.dom :as dom]
+  (:require [c2.core :as c2]
             [c2.event :as event]
             [c2.scale :as scale]
-            [c2.svg :as svg]
-            [singult.core :as singult])
-  (:use [c2.maths :only [sin cos Tau extent]]))
+            [c2.svg :as svg])
+  (:use [c2.maths :only [extent]]))
 
 (defn crisp
   "This makes things look nice and sharp by rounding and then offsetting x and y
@@ -33,20 +32,20 @@
                             :range [(dec height) 0])
         box-width-line (fn [y] [:line (crisp {:x1 0, :x2 box-width
                                               :y1 y, :y2 y})])]
-    (singult/merge!
-      (.getElementById js/document "content")
+    (bind!
+      "#content"
       [:div#content
        ;; aw yeah, inlining stylesheets
        [:style {:type "text/css"}
-        (str "body {background-color: #222222;}"
-             ".box {fill: #222222; stroke: #cfcfcf;}"
-             "line {stroke: #cfcfcf;}"
+        (str "body {background-color: #222222}"
+             ".box {fill: #222222; stroke: #cfcfcf}"
+             "line {stroke: #cfcfcf}"
              "line.range {stroke-dasharray: 5,5")]
        [:svg#main {:style {:display "block"
                            :margin "auto"
                            :height height
                            :width width}}
-        (singult/unify
+        (c2/unify
           (map-indexed vector data)
           (fn [[i {:keys [q10 q25 median q75 q90]}]]
             [:g.boxplot {:transform (svg/translate [(* i group-width) 0])}
