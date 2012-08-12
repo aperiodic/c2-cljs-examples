@@ -10,56 +10,102 @@
 
 (defn- rad->deg [rad] (-> rad (/ Tau), (* 360)))
 
-(def stars {:sun {:mass 1.9891e30}})
+(defn- title-case
+  [s]
+  (-> s
+    (str/replace \- \space)
+    (str/split #" ")
+    (->>
+      (map str/capitalize)
+      (str/join " "))))
 
-(def planets {:mercury {:mass 3.301e23}
-              :venus   {:mass 4.867e24}
-              :earth   {:mass 5.972e24}
-              :mars    {:mass 6.419e23}
-              :jupiter {:mass 1.889e27}
-              :saturn  {:mass 5.685e26}
-              :uranus  {:mass 8.682e25}
-              :neptune {:mass 1.024e26}})
+(defn- css-safe
+  [s]
+  (.replace s "'" ""))
 
-(def minor-bodies {:eris {:mass 1.67e22}
-                   :pluto {:mass 1.471e22}
-                   :haumea {:mass 4.006e21}
-                   :makemake {:mass 3e21}
-                   :sedna {:mass 1e21}
-                   :ceres {:mass 9.3e20}
-                   :vesta {:mass 2.6e20}})
+(def stars {:sun 1.9884e30})
 
-(def solar-system (merge stars planets minor-bodies))
+(def planets {:mercury 3.301e23
+              :venus   4.867e24
+              :earth   5.972e24
+              :mars    6.419e23
+              :jupiter 1.899e27
+              :saturn  5.685e26
+              :uranus  8.682e25
+              :neptune 1.024e26})
 
-(def body-colors (str ".jupiter, .mars, .sedna {fill: #1b9e77}"
-                      ".saturn, .mercury, .ceres {fill: #d95f02}"
-                      ".neptune, .eris {fill: #7570b3}"
-                      ".uranus, .pluto {fill: #e7298a}"
-                      ".earth, .haumea, .vesta {fill: #66a61e}"
-                      ".venus, .makemake, .sun {fill: #e6ab02}"))
+(def other-bodies {:ganymede 1.482e23
+                   :titan 1.345e23
+                   :callisto 1.076e23
+                   :io 8.93e22
+                   :earth's-moon 7.35e22
+                   :europa 4.8e22
+                   :triton 2.15e22
+                   :eris 1.67e22
+                   :pluto 1.471e22
+                   :haumea 4.006e21
+                   :titania 3.526e21
+                   :oberon 3.014e21
+                   :makemake 3e21
+                   :rhea 2.3166e21
+                   :iapetus 1.937e21
+                   :quaoar 1.6e21})
+
+(def besides-sun (merge planets other-bodies))
+
+(def body-colors (str ".earth, .mercury, .europa, .oberon {fill: #1b9e77}"
+                      ".saturn, .mars, .titan, .eris, .rhea {fill: #d95f02}"
+                      ".neptune, .all-other-solid-bodies, .ganymede,"
+                        ".triton, .makemake {fill: #7570b3}"
+                      ".uranus, .callisto, .pluto, .iapetus {fill: #e7298a}"
+                      ".jupiter, .earths-moon, .titania {fill: #66a61e}"
+                      ".sun, .venus, .io, .haumea, .quaoar {fill: #e6ab02}"
+                      ".everything-else {fill: #dbdbdb}"))
 
 (defn mass-charts []
-  (let [format-data-map (fn [m]
-                          (for [[b attrs] (sort-by (comp :mass second) m)]
-                                  {:name (name b), :mass (:mass attrs)}))
-        charts [{:name "Planets"
-                 :children (format-data-map planets)}
-                {:name "Dwarf Planets & Asteroids"
-                 :children (format-data-map minor-bodies)}
-                {:name "Solar System Objects at Least as Massive as Vesta"
-                 :children (format-data-map solar-system)}]
+  (let [radius 300
+        margin (/ radius 10)
+        half-pie (+ radius margin)
+        pie-width (* 2 half-pie)
+        title-size 48
+        group-height (+ pie-width title-size margin)
+        format-data-map (fn [m]
+                          (for [[b mass] (sort-by second m)]
+                                  {:name (name b), :mass mass}))
+        charts [{:name "The Solar System"
+                 :children (format-data-map
+                             {:sun (:sun stars)
+                              :everything-else (apply + (vals besides-sun))})}
+                {:name "Planets"
+                 :children (format-data-map
+                             (-> planets
+                               (assoc :all-other-solid-bodies
+                                      (apply + (vals other-bodies)))))}
+                {:name "Other Solid Bodies"
+                 :children (format-data-map other-bodies)}]
         make-slices (fn [dm]
                       (filter #(= 1 (get-in % [:partition :depth]))
                               (partition dm :value :mass, :size [Tau 1])))
-        radius 300
-        margin 30
         quarter-turn-ccw (svg/rotate (-> Tau (/ 4), (* -1), rad->deg))
         ->pie-slice (fn [{name :name, mass :mass, {:keys [x dx]} :partition}]
                       [:g.slice
-                       [:path {:class name
+                       [:path {:class (css-safe name)
                                :d (svg/arc :outer-radius radius
-                                           :start-angle x
-                                           :end-angle  (+ x dx))}]])]
+                                           :start-angle (* -1 x)
+                                           :end-angle  (* -1 (+ x dx)))}]])
+        ->legend (fn [i-max [i {name :name}]]
+                   (let [text-size 20
+                         [i i-max] (map inc [i i-max])
+                         i->y (fn [i] (+ (* i text-size (/ 3 2)) text-size))
+                         y-off (- (i->y i-max) (i->y i))]
+                     [:g.legend-entry {:transform (svg/translate [0 y-off])}
+                      [:rect {:class (css-safe name)
+                              :attrs {:shape-rendering "crispEdges"}
+                              :width text-size, :height text-size}]
+                      [:text {:x (* text-size (/ 4 3))
+                              :y (* text-size (/ 85 100))
+                              :font-size text-size}
+                       (title-case name)]]))]
     (bind!
       "#content"
       [:div#content
@@ -67,22 +113,28 @@
        [:style {:type "text/css"}
         (str "body {background-color: #222222}"
              "path {fill: #222222; stroke: #dbdbdb; stroke-width: 2px}"
+             "text {fill: white}"
              body-colors)]
-       (-> (for [[i id data] (map vector (range)
-                                         ["planets" "minor" "all"]
+       (vec
+         (concat
+           [:svg#main {:width 960, :height (* group-height 3)}]
+           (for [[i id data] (map vector (range)
+                                         ["all" "planets" "solid"]
                                          charts)]
-             (let [x-offset (+ radius margin)
-                   y-offset (+ radius margin (* 2 i radius) (* 2 i margin))]
+             [:g.figure
+              {:transform (svg/translate [0 (* i group-height)])}
+              [:text.title {:x margin, :y (+ title-size (/ margin 2))
+                            :font-size title-size}
+               (:name data)]
+              [:g {:transform (svg/translate [0 (+ margin title-size)])}
                [:g.chart
-                {:id id, :transform (str (svg/translate [x-offset y-offset])
-                                         quarter-turn-ccw)}
-                (c2/unify (make-slices data) ->pie-slice)
-                [:g.legend
-                 {:transform (svg/translate [(+ (* radius 2) (* margin 2)) 0])}
-                 (c2/unify (make-slices data)
-                           )]]))
-         (conj {:width 960, :height 1980})
-         (conj :svg#main)
-         vec)])))
+               {:id id,
+                :transform (str (svg/translate [half-pie half-pie])
+                                quarter-turn-ccw)}
+               (c2/unify (make-slices data) ->pie-slice)]
+              [:g.legend
+               {:transform (svg/translate [pie-width 0])}
+               (c2/unify (map-indexed vector (make-slices data))
+                         (partial ->legend (count (make-slices data))))]]])))])))
 
 (event/on-load mass-charts)
