@@ -55,12 +55,12 @@
 
 (def body-colors (str ".earth, .mercury, .europa, .oberon {fill: #1b9e77}"
                       ".saturn, .mars, .titan, .eris, .rhea {fill: #d95f02}"
-                      ".neptune, .all-other-solid-bodies, .ganymede,"
+                      ".neptune, .ganymede,"
                         ".triton, .makemake {fill: #7570b3}"
                       ".uranus, .callisto, .pluto, .iapetus {fill: #e7298a}"
                       ".jupiter, .earths-moon, .titania {fill: #66a61e}"
                       ".sun, .venus, .io, .haumea, .quaoar {fill: #e6ab02}"
-                      ".everything-else {fill: #dbdbdb}"))
+                      ".all-other-bodies, .everything-else {fill: #dbdbdb}"))
 
 (defn mass-charts []
   (let [radius 300
@@ -69,20 +69,25 @@
         pie-width (* 2 half-pie)
         title-size 48
         group-height (+ pie-width title-size margin)
-        format-data-map (fn [m]
-                          (for [[b mass] (sort-by second m)]
-                                  {:name (name b), :mass mass}))
+        format-data (fn [m]
+                      (for [[b mass] (sort-by second m)]
+                        {:name (name b), :mass mass}))
         charts [{:name "The Solar System"
-                 :children (format-data-map
+                 :children (format-data
                              {:sun (:sun stars)
                               :everything-else (apply + (vals besides-sun))})}
-                {:name "Planets"
-                 :children (format-data-map
+                {:name "Excluding the Sun"
+                 :children (format-data
                              (-> planets
-                               (assoc :all-other-solid-bodies
-                                      (apply + (vals other-bodies)))))}
-                {:name "Other Solid Bodies"
-                 :children (format-data-map other-bodies)}]
+                               (dissoc :mars)
+                               (dissoc :mercury)
+                               (assoc :all-other-bodies
+                                      (apply +
+                                             (:mars planets)
+                                             (:mercury planets)
+                                             (vals other-bodies)))))}
+                {:name "Also Excluding Planets"
+                 :children (format-data other-bodies)}]
         make-slices (fn [dm]
                       (filter #(= 1 (get-in % [:partition :depth]))
                               (partition dm :value :mass, :size [Tau 1])))
