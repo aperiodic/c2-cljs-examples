@@ -72,7 +72,29 @@
         format-data (fn [m]
                       (for [[b mass] (sort-by second m)]
                         {:name (name b), :mass mass}))
-        charts [{:name "The Solar System"
+        make-slices (fn [dm]
+                      (filter #(= 1 (get-in % [:partition :depth]))
+                              (partition dm :value :mass, :size [Tau 1])))
+        ->slice (fn [{name :name, mass :mass, {:keys [x dx]} :partition}]
+                  [:g.slice
+                   [:path {:class (css-safe name)
+                           :d (svg/arc :outer-radius radius
+                                       :start-angle (* -1 x)
+                                       :end-angle  (* -1 (+ x dx)))}]])
+        ->legend (fn [i-max [i {name :name}]]
+                   (let [text-size 20
+                         [i i-max] (map inc [i i-max])
+                         i->y (fn [i] (+ (* i text-size (/ 3 2)) text-size))
+                         y-off (- (i->y i-max) (i->y i))]
+                     [:g.legend-entry {:transform (svg/translate [0 y-off])}
+                      [:rect {:class (css-safe name)
+                              :attrs {:shape-rendering "crispEdges"}
+                              :width text-size, :height text-size}]
+                      [:text {:x (* text-size (/ 4 3))
+                              :y (* text-size (/ 85 100))
+                              :font-size text-size}
+                       (title-case name)]]))
+        charts [{:name "The Solar System by Mass"
                  :children (format-data
                              {:sun (:sun stars)
                               :everything-else (apply + (vals besides-sun))})}
@@ -87,30 +109,7 @@
                                              (:mercury planets)
                                              (vals other-bodies)))))}
                 {:name "Also Excluding Planets"
-                 :children (format-data other-bodies)}]
-        make-slices (fn [dm]
-                      (filter #(= 1 (get-in % [:partition :depth]))
-                              (partition dm :value :mass, :size [Tau 1])))
-        quarter-turn-ccw (svg/rotate (-> Tau (/ 4), (* -1), rad->deg))
-        ->pie-slice (fn [{name :name, mass :mass, {:keys [x dx]} :partition}]
-                      [:g.slice
-                       [:path {:class (css-safe name)
-                               :d (svg/arc :outer-radius radius
-                                           :start-angle (* -1 x)
-                                           :end-angle  (* -1 (+ x dx)))}]])
-        ->legend (fn [i-max [i {name :name}]]
-                   (let [text-size 20
-                         [i i-max] (map inc [i i-max])
-                         i->y (fn [i] (+ (* i text-size (/ 3 2)) text-size))
-                         y-off (- (i->y i-max) (i->y i))]
-                     [:g.legend-entry {:transform (svg/translate [0 y-off])}
-                      [:rect {:class (css-safe name)
-                              :attrs {:shape-rendering "crispEdges"}
-                              :width text-size, :height text-size}]
-                      [:text {:x (* text-size (/ 4 3))
-                              :y (* text-size (/ 85 100))
-                              :font-size text-size}
-                       (title-case name)]]))]
+                 :children (format-data other-bodies)}]]
     (bind!
       "#content"
       [:div#content
@@ -122,7 +121,7 @@
              body-colors)]
        (vec
          (concat
-           [:svg#main {:width 960, :height (* group-height 3)}]
+           [:svg#main {:width 960, :height (* group-height (count charts))}]
            (for [[i id data] (map vector (range)
                                          ["all" "planets" "solid"]
                                          charts)]
@@ -133,10 +132,9 @@
                (:name data)]
               [:g {:transform (svg/translate [0 (+ margin title-size)])}
                [:g.chart
-               {:id id,
-                :transform (str (svg/translate [half-pie half-pie])
-                                quarter-turn-ccw)}
-               (c2/unify (make-slices data) ->pie-slice)]
+                {:transform (str (svg/translate [half-pie half-pie])
+                                 (svg/rotate (-> Tau (/ 4), (* -1), rad->deg)))}
+               (c2/unify (make-slices data) ->slice)]
               [:g.legend
                {:transform (svg/translate [pie-width 0])}
                (c2/unify (map-indexed vector (make-slices data))
