@@ -1,5 +1,5 @@
 (ns c2-cljs-examples.boxplots
-  (:use-macros [c2.util :only [p pp bind!]])
+  (:use-macros [c2.util :only [bind!]])
   (:require [c2.core :as c2]
             [c2.event :as event]
             [c2.scale :as scale]
@@ -63,5 +63,3 @@
                                 :height (- (scale q25) (scale q75))})]
              ;; line across the box at the median
              (box-width-line (scale median))]))]])))
-
-(event/on-load boxplots)
