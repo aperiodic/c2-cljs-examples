@@ -90,8 +90,7 @@
                       [:rect {:class (css-safe name)
                               :attrs {:shape-rendering "crispEdges"}
                               :width text-size, :height text-size}]
-                      [:text {:x (* text-size (/ 4 3))
-                              :y (* text-size (/ 85 100))
+                      [:text {:x (* text-size 1.33), :y (* text-size 0.85)
                               :font-size text-size}
                        (title-case name)]]))
         charts [{:name "The Solar System by Mass"
@@ -122,9 +121,7 @@
        (vec
          (concat
            [:svg#main {:width 960, :height (* group-height (count charts))}]
-           (for [[i id data] (map vector (range)
-                                         ["all" "planets" "solid"]
-                                         charts)]
+           (for [[i data] (map vector (range) charts)]
              [:g.figure
               {:transform (svg/translate [0 (* i group-height)])}
               [:text.title {:x margin, :y (+ title-size (/ margin 2))
