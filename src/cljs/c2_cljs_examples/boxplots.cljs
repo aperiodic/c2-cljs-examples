@@ -44,7 +44,7 @@
         (c2/unify
           (map-indexed vector data)
           (fn [[i {:keys [q10 q25 median q75 q90]}]]
-            [:g.boxplot {:transform (svg/translate [(inc (* i group-width)) 0])}
+            [:g.boxplot {:transform (svg/translate [(inc (* i group-width)) 1])}
              [:g.range
               ;; dashed line from the 10th percentile to the 90th
               ;; this goes under the box, but the box has a fill, so NBD
