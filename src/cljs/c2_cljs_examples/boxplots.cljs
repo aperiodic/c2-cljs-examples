@@ -7,13 +7,9 @@
   (:use [c2.maths :only [extent]]))
 
 (defn crisp
-  "This makes things look nice and sharp by rounding and then offsetting x and y
-  coordinates by half a pixel."
+  "This makes things look nice and sharp using a magic SVG attribute."
   [m]
-  (into {} (for [[k v] m]
-             (if (or (re-find #"^x" (name k)) (re-find #"^y" (name k)))
-               [k (+ 0.5 (.round js/Math v))]
-               [k v]))))
+  (assoc-in m [:attrs :shape-rendering] "crispEdges"))
 
 (defn boxplots []
   (let [height 500
@@ -63,3 +59,5 @@
                                 :height (- (scale q25) (scale q75))})]
              ;; line across the box at the median
              (box-width-line (scale median))]))]])))
+
+(event/on-load boxplots)
