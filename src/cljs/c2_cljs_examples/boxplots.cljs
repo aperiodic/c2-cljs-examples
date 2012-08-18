@@ -37,10 +37,10 @@
       [:div#content
        ;; aw yeah, inlining stylesheets
        [:style {:type "text/css"}
-        (str "body {background-color: #222222}"
-             ".box {fill: #222222; stroke: #cfcfcf}"
-             "line {stroke: #cfcfcf}"
-             "line.range {stroke-dasharray: 5,5")]
+        (str "body { background-color: #222222 }"
+             ".box { fill: #222222; stroke: #cfcfcf }"
+             "line { stroke: #cfcfcf }"
+             "line.range { stroke-dasharray: 5,5 }")]
        [:svg#main {:style {:display "block"
                            :margin "auto"
                            :height height
