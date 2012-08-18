@@ -33,10 +33,10 @@
       [:div#content
        ;; aw yeah, inlining stylesheets
        [:style {:type "text/css"}
-        (str "body {background-color: #222222}"
-             ".box {fill: #222222; stroke: #cfcfcf}"
-             "line {stroke: #cfcfcf}"
-             "line.range {stroke-dasharray: 5,5")]
+        (str "body { background-color: #222222 }"
+             ".box { fill: #222222; stroke: #cfcfcf }"
+             "line { stroke: #cfcfcf }"
+             "line.range { stroke-dasharray: 5,5 }")]
        [:svg#main {:style {:display "block"
                            :margin "auto"
                            :height height
@@ -44,7 +44,7 @@
         (c2/unify
           (map-indexed vector data)
           (fn [[i {:keys [q10 q25 median q75 q90]}]]
-            [:g.boxplot {:transform (svg/translate [(* i group-width) 0])}
+            [:g.boxplot {:transform (svg/translate [(inc (* i group-width)) 0])}
              [:g.range
               ;; dashed line from the 10th percentile to the 90th
               ;; this goes under the box, but the box has a fill, so NBD
