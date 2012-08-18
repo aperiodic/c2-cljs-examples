@@ -17,7 +17,36 @@
 (defn index []
   (html5
     [:head
-      [:title "c2-cljs-examples"]
-      (include-clojurescript "/js/main.js")]
+      [:title "C2 Clojurescript Examples"]]
     [:body
-      [:div#content]]))
+      [:div#content
+       [:a {:href "boxplots"} "Boxplots"]
+       [:a {:href "space-pie"} "Pie Charts (Advanced)"]
+       [:a {:href "bullet"} "Bullet"]]]))
+
+(defn boxplots []
+  (html5
+    [:head
+     [:title "Boxes & Whiskers"]
+     (include-clojurescript "/js/main.js")]
+    [:body
+     [:div#content]
+     (javascript-tag "c2_cljs_examples.boxplots.boxplots();")]))
+
+(defn bullet []
+  (html5
+    [:head
+     [:title "Bullet Charts (Sleek & Speedy like the Trains of Tomorrow)"]
+     (include-clojurescript "/js/main.js")]
+    [:body
+     [:div#content]
+     (javascript-tag "c2_cljs_examples.bullet.bullet();")]))
+
+(defn space-pie []
+  (html5
+    [:head
+     [:title "Pie Charts regarding the Congealed Remains of an Ancient Disk of Dust"]
+     (include-clojurescript "/js/main.js")]
+    [:body
+     [:div#content]
+     (javascript-tag "c2_cljs_examples.space_pie.space_pie();")]))
