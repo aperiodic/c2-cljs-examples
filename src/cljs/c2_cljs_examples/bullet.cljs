@@ -83,5 +83,3 @@
                      [:rect.marker
                       {:x (sc m), :y (half (- range-height marker-height))
                        :width marker-width, :height marker-height}])))])))]])))
-
-(event/on-load bullet)

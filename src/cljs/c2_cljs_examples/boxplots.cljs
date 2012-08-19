@@ -59,5 +59,3 @@
                                 :height (- (scale q25) (scale q75))})]
              ;; line across the box at the median
              (box-width-line (scale median))]))]])))
-
-(event/on-load boxplots)
