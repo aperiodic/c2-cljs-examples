@@ -1,4 +1,4 @@
-(ns c2-cljs-examples.pie
+(ns c2-cljs-examples.space-pie
   (:use-macros [c2.util :only [bind!]])
   (:require [c2.core :as c2]
             [c2.event :as event]
@@ -62,7 +62,7 @@
                       ".sun, .venus, .io, .haumea, .quaoar {fill: #e6ab02}"
                       ".all-other-bodies, .everything-else {fill: #dbdbdb}"))
 
-(defn mass-charts []
+(defn space-pie []
   (let [radius 300
         margin (/ radius 10)
         half-pie (+ radius margin)
@@ -136,5 +136,3 @@
                {:transform (svg/translate [pie-width 0])}
                (c2/unify (map-indexed vector (make-slices data))
                          (partial ->legend (count (make-slices data))))]]])))])))
-
-(event/on-load mass-charts)
