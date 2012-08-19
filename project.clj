@@ -4,10 +4,9 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
-                 [com.keminglabs/c2 "0.2.0"]
+                 [com.keminglabs/c2 "0.2.1-SNAPSHOT"]
                  [compojure "1.0.4"]
-                 [hiccup "1.0.0"]
-                 [com.keminglabs/singult "0.1.3"]]
+                 [hiccup "1.0.0"]]
   :plugins [[lein-cljsbuild "0.2.4"]
             [lein-ring "0.7.1"]]
   :ring {:handler c2-cljs-examples.routes/handler}
