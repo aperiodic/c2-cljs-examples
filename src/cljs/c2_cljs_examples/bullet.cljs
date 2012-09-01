@@ -11,6 +11,7 @@
   (let [bar-width 800
         group-height 40
         range-height 25
+        group-gutter (half (- group-height range-height))
         measurement-height 9
         marker-height 15
         marker-width 2
@@ -48,7 +49,8 @@
              ".bullet .subtitle { fill: #999 ")]
        [:svg#main {:style {:display "block"
                            :margin "auto"
-                           :width 960}}
+                           :width 960
+                           :height (* (count data) group-height)}}
         (c2/unify
           (map-indexed vector data)
           (fn [[i {:keys [metric units ranges measurements markers]}]]
@@ -56,7 +58,9 @@
                   sc (scale/linear :domain [0 rightmost]
                                    :range [0 bar-width])]
               ;; wrapper group for each chart & label
-              [:g.bullet {:transform (svg/translate [0 (* i group-height)])}
+              [:g.bullet
+               {:transform (svg/translate [0 (+ (* i group-height)
+                                                group-gutter)])}
                ;; the text label
                [:g.label
                 {:transform (svg/translate [(- label-margin text-gutter)
