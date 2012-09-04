@@ -1,0 +1,21 @@
+#vis {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+#code {
+  background-color: #121212;
+  font-size: 16px;
+
+  margin: auto;
+  margin-bottom: 2em;
+  padding: 0.65em;
+  padding-top: 0em;
+  padding-bottom: 0em;
+  width: 960px;
+}
+
+#code pre {
+  padding-top: 0.5em;
+  padding-bottom: 1em;
+}

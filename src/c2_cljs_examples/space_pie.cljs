@@ -8,13 +8,13 @@
         [c2.maths :only [sin cos Tau]]))
 
 ;;
-;; General Utility
+;; A General Utility Not Yet in C2
 ;;
 
-(defn- rad->deg [rad] (-> rad (/ Tau), (* 360)))
+(defn- deg [rad] (-> rad (/ Tau), (* 360)))
 
 ;;
-;; Utilities Specific to Our Data
+;; Utilities Specific to our Data
 ;;
 
 (defn- title-case
@@ -45,21 +45,21 @@
   (apply str (map color->css colors)))
 
 ;;
-;; Define Our Color Palette Function
+;; Our Color Palette Function
 ;;
 
 (def the-palette
   "Derived from Cynthia Brewer's color brewer; all blemishes my own.
   http://colorbrewer2.org"
-  {:blue {:base :#174d69, :light :#2a86d2}
-   :green {:base :#66a61e, :dark :#376b00}
-   :grey {:dark :#606060, :light :#999999}
-   :orange {:base :#d95f02, :dark :#923700 }
-   :pink {:base :#e7298a, :dark :#97004f}
-   :purple {:base :#7570b3, :dark :#36298d, :darkest :#2f0058}
-   :teal {:base :#1b9e77}
-   :white {:base :#dbdbdb}
-   :yellow {:base :#e6ab02, :dark :#a47400}})
+  {:blue {:base "#174d69", :light "#2a86d2"}
+   :green {:base "#66a61e", :dark "#376b00"}
+   :grey {:dark "#606060", :light "#999999"}
+   :orange {:base "#d95f02", :dark "#923700" }
+   :pink {:base "#e7298a", :dark "#97004f"}
+   :purple {:base "#7570b3", :dark "#36298d", :darkest "#2f0058"}
+   :teal {:base "#1b9e77"}
+   :white {:base "#dbdbdb"}
+   :yellow {:base "#e6ab02", :dark "#a47400"}})
 
 (defn palette
   "Takes a keyword specifying a color in the palette map defined above, with an
@@ -115,7 +115,7 @@
     {:name (name b), :mass mass}))
 
 ;;
-;; Define Charts from the Above Data
+;; Charts Using the Above Data
 ;;
 
 (def summary
@@ -165,6 +165,19 @@
 (def charts [summary no-sun no-planets])
 
 ;;
+;; Define the CSS
+;;
+
+(def style (str "body { background-color: #222222 }"
+                "path { fill: #222222; stroke: #dbdbdb; stroke-width: 2px }"
+                "rect { stroke: #dbdbdb; stroke-width: 2px }"
+                "text { fill: white }"
+                (->> charts
+                  (map :colors)
+                  (map colors->css)
+                  (apply str))))
+
+;;
 ;; Turn Those Data into Pictures!
 ;;
 
@@ -179,12 +192,16 @@
         make-slices (fn [dm]
                       (filter #(= 1 (get-in % [:partition :depth]))
                               (partition dm :value :mass, :size [Tau 1])))
+
+        ;; a function for creating the pie chart's slices
         ->slice (fn [{name :name, mass :mass, {:keys [x dx]} :partition}]
                   [:g.slice
                    [:path {:class (keyword->css-class name)
                            :d (svg/arc :outer-radius radius
                                        :start-angle (* -1 x)
                                        :end-angle  (* -1 (+ x dx)))}]])
+
+        ;; a function for creating an entry in the legend
         ->legend (fn [i-max [i {name :name}]]
                    (let [text-size 20
                          [i i-max] (map inc [i i-max])
@@ -196,36 +213,32 @@
                               :width text-size, :height text-size}]
                       [:text {:x (* text-size 1.33), :y (* text-size 0.85)
                               :font-size text-size}
-                       (title-case name)]]))
-        charts [summary no-sun no-planets]]
+                       (title-case name)]]))]
     (bind!
-      "#content"
-      [:div#content
-       ;; aw yeah, inlining stylesheets
-       [:style {:type "text/css"}
-        (str "body { background-color: #222222 }"
-             "path { fill: #222222; stroke: #dbdbdb; stroke-width: 2px }"
-             "rect { stroke: #dbdbdb; stroke-width: 2px }"
-             "text { fill: white }"
-             (->> charts
-               (map :colors)
-               (map colors->css)
-               (apply str)))]
-       [:svg#main {:style {:display "block"
-                           :margin "auto"
-                           :width width
-                           :height (* group-height (count charts))}}
+      "#vis"
+      [:div#vis [:style {:type "text/css"} style]
+
+       ;; the containing SVG element
+       [:svg#main {:style {:display "block", :margin "auto"
+                           :width width, :height (* group-height
+                                                    (count charts))}}
+
         (for [[i data] (map vector (range) charts)]
-          [:g.figure
-           {:transform (svg/translate [0 (* i group-height)])}
+          [:g.figure {:transform (svg/translate [0 (* i group-height)])}
+
+           ;; the title of the chart
            [:text.title {:x margin, :y (+ title-size (/ margin 2))
                          :font-size title-size}
             (:name data)]
+
+           ;; the pie chart itself
            [:g {:transform (svg/translate [0 (+ margin title-size)])}
             [:g.chart
              {:transform (str (svg/translate [half-pie half-pie])
-                              (svg/rotate (-> Tau (/ 4), (* -1), rad->deg)))}
+                              (svg/rotate (-> Tau (/ 4), (* -1), deg)))}
              (c2/unify (make-slices data) ->slice)]
+
+            ;; the chart's legend
             [:g.legend
              {:transform (svg/translate [pie-width 0])}
              (c2/unify (map-indexed vector (make-slices data))

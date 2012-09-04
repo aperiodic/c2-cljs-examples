@@ -7,13 +7,12 @@
                  [com.keminglabs/c2 "0.2.1-SNAPSHOT"]
                  [compojure "1.0.4"]
                  [hiccup "1.0.0"]]
+  :profiles {:dev {:dependencies [[hickory "0.2.0"]]}}
   :plugins [[lein-cljsbuild "0.2.4"]
             [lein-ring "0.7.1"]]
-  :ring {:handler c2-cljs-examples.routes/handler}
-  :source-paths ["src/clj"]
   :cljsbuild
     {:builds
-      [{:source-path "src/cljs"
+      [{:source-path "src"
         :compiler
           {:output-to "resources/public/js/main.js"
            :optimizations :whitespace
