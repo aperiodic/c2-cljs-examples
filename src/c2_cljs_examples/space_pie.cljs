@@ -18,7 +18,7 @@
 ;;
 
 (defn- title-case
-  "Dumb title case, which capitalizes every whitespace-seperated word. Good
+  "Dumb title case, which capitalizes every whitespace-separated word. Good
   enough for our data!"
   [s]
   (-> s
@@ -104,7 +104,7 @@
                    :quaoar 1.6e21})
 
 ;;
-;; Utilities for Defining Charts from These Data
+;; Utilities for Defining Charts from the Mass Data
 ;;
 
 (defn sum-mass [mass-map] (apply + (vals mass-map)))
@@ -115,7 +115,7 @@
     {:name (name b), :mass mass}))
 
 ;;
-;; Charts Using the Above Data
+;; Charts from the Mass Data
 ;;
 
 (def summary
@@ -193,7 +193,7 @@
                       (filter #(= 1 (get-in % [:partition :depth]))
                               (partition dm :value :mass, :size [Tau 1])))
 
-        ;; a function for creating the pie chart's slices
+        ;; a function for creating a slice of the pie chart
         ->slice (fn [{name :name, mass :mass, {:keys [x dx]} :partition}]
                   [:g.slice
                    [:path {:class (keyword->css-class name)
