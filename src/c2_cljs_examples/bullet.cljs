@@ -34,7 +34,7 @@
                    ".bullet .subtitle { fill: #999 }")
         data [{:metric "Revenue", :units "USD in thousands"
                :ranges [150 225 300], :measurements [220 270], :markers [250]}
-              {:metric "Profit", :units "percent"
+              {:metric "Profit", :units "%"
                :ranges [20 25 30], :measurements [21 23], :markers [26]}
               {:metric "Order Size", :units "USD average"
                :ranges [350 500 600], :measurements [100 320], :markers [550]}

@@ -203,7 +203,7 @@
 
         ;; a function for creating an entry in the legend
         ->legend (fn [i-max [i {name :name}]]
-                   (let [text-size 20
+                   (let [text-size 19
                          [i i-max] (map inc [i i-max])
                          i->y (fn [i] (+ (* i text-size (/ 3 2)) text-size))
                          y-off (- (i->y i-max) (i->y i))]
@@ -227,7 +227,7 @@
           [:g.figure {:transform (svg/translate [0 (* i group-height)])}
 
            ;; the title of the chart
-           [:text.title {:x margin, :y (+ title-size (/ margin 2))
+           [:text.title {:x margin, :y (+ title-size (/ margin 4))
                          :font-size title-size}
             (:name data)]
 
