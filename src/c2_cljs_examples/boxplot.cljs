@@ -1,4 +1,4 @@
-(ns c2-cljs-examples.boxplots
+(ns c2-cljs-examples.boxplot
   (:use-macros [c2.util :only [bind!]])
   (:require [c2.core :as c2]
             [c2.event :as event]
@@ -7,17 +7,22 @@
   (:use [c2.maths :only [extent]]))
 
 (defn crisp
-  "This makes things look nice and sharp using a magic SVG attribute."
-  [m]
-  (assoc-in m [:attrs :shape-rendering] "crispEdges"))
+  "This makes edges sharp via rounding, which I've found to give more consistent
+  results than the SVG 'crispEdges' property."
+  [shape]
+  (into {} (for [[k v] shape]
+             (cond
+               (re-find #"^x\d*" (name k)) [k (int v)]
+               (re-find #"^y\d*" (name k)) [k (+ (int v) 0.5)]
+               :otherwise [k v]))))
 
-(defn boxplots []
+(defn boxplot []
   (let [height 500
         width 960
         group-width 30
         box-width 17
         half-box-width (/ box-width 2)
-        bins [:q10 :q25 :median :q75 :q90]
+        bins [:q10 :q15 :q25 :median :q75 :q85 :q90]
         data (repeatedly
                (quot width group-width)
                #(into {} (map vector
@@ -48,7 +53,7 @@
           (fn [[i {:keys [q10 q25 median q75 q90]}]]
 
             ;; a group for each box
-            [:g.boxplot {:transform (svg/translate [(inc (* i group-width)) 1])}
+            [:g.boxplot {:transform (svg/translate [(inc (* i group-width)) 0])}
 
              ;; dashed line from the 10th percentile to the 90th
              ;; this goes under the box, but the box has a fill, so NBD

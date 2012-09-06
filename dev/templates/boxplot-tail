@@ -1,6 +1,6 @@
     </div>
     <script type="text/javascript">
-      c2_cljs_examples.boxplots.boxplots();
+      c2_cljs_examples.boxplot.boxplot();
     </script>
   </body>
 </html>

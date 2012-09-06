@@ -4,19 +4,19 @@ body {
   font-family: 'Electrolize';
 }
 
-img {
-  border: 1px solid #a0a0a0;
-}
-
-img:hover {
-  border: 1px solid #0B8CB8;
-  box-shadow: inset rgba(0, 0, 0, 0.4) 0 0 12px,#085E7B 0 0 10px 1px;
-}
-
 #container {
   width: 840px;
   margin: auto;
   margin-top: 2em;
+}
+
+#container img {
+  border: 1px solid #a0a0a0;
+}
+
+#container img:hover {
+  border: 1px solid #0B8CB8;
+  box-shadow: inset rgba(0, 0, 0, 0.4) 0 0 12px,#085E7B 0 0 10px 1px;
 }
 
 #examples {
