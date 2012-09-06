@@ -209,8 +209,8 @@
                          y-off (- (i->y i-max) (i->y i))]
                      [:g.legend-entry {:transform (svg/translate [0 y-off])}
                       [:rect {:class (keyword->css-class name)
-                              :attrs {:shape-rendering "crispEdges"}
-                              :width text-size, :height text-size}]
+                              :width text-size, :height text-size
+                              :shape-rendering "crispEdges"}]
                       [:text {:x (* text-size 1.33), :y (* text-size 0.85)
                               :font-size text-size}
                        (title-case name)]]))]

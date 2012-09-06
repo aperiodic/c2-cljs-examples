@@ -7,18 +7,22 @@
 
 (defn half [x] (/ x 2))
 
+(defn crisp
+  [shape-attrs]
+  (assoc shape-attrs :shape-rendering "crispEdges"))
+
 (defn bullet []
-  (let [bar-width 800
-        group-height 40
-        range-height 25
+  (let [bar-width 780
+        group-height 55
+        range-height 40
         group-gutter (half (- group-height range-height))
-        measurement-height 9
-        marker-height 15
+        measurement-height 15
+        marker-height 20
         marker-width 2
-        label-margin 120
-        title-size 14
-        subtitle-size 10
-        text-gutter 5
+        label-margin 150
+        title-size 18
+        subtitle-size 12
+        text-gutter 8
         style (str "body { background-color: #222222 }"
                    ".bullet { font: " subtitle-size "px \"Helvetica Neue\",
                                                     Helvetica, sans-serif }"
@@ -75,17 +79,19 @@
 
                 ;; the grey rects denoting range bins
                 (for [[j r] (map-indexed vector (sort > ranges))]
-                  [:rect {:class (str "range s" j)
-                          :width (sc r), :height range-height}])
+                  [:rect (crisp {:class (str "range s" j)
+                                 :width (sc r), :height range-height})])
 
                 ;; the thin blue rects denoting measurements
                 (for [[j m] (map-indexed vector (sort > measurements))]
-                  [:rect {:class (str "measurement s" j)
-                          :width (sc m), :height measurement-height
-                          :y (half (- range-height measurement-height))}])
+                  [:rect (crisp
+                           {:class (str "measurement s" j)
+                            :width (sc m), :height measurement-height
+                            :y (half (- range-height measurement-height))})])
 
                 ;; the little black goal markers
                 (for [[j m] (map-indexed vector (sort > markers))]
                   [:rect.marker
-                   {:x (sc m), :y (half (- range-height marker-height))
-                    :width marker-width, :height marker-height}])]])))]])))
+                   (crisp
+                     {:x (sc m), :y (half (- range-height marker-height))
+                      :width marker-width, :height marker-height})])]])))]])))

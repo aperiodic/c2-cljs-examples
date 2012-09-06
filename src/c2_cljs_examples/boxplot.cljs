@@ -7,14 +7,8 @@
   (:use [c2.maths :only [extent]]))
 
 (defn crisp
-  "This makes edges sharp via rounding, which I've found to give more consistent
-  results than the SVG 'crispEdges' property."
-  [shape]
-  (into {} (for [[k v] shape]
-             (cond
-               (re-find #"^x\d*" (name k)) [k (int v)]
-               (re-find #"^y\d*" (name k)) [k (+ (int v) 0.5)]
-               :otherwise [k v]))))
+  [shape-attrs]
+  (assoc shape-attrs :shape-rendering "crispEdges"))
 
 (defn boxplot []
   (let [height 500
