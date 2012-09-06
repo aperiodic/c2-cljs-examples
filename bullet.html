@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <title>Bullet Charts (Sleek &amp; Speedy like the Trains of Tomorrow)</title>
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <link href="css/pygments.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript">
+      var CLOSURE_NO_DEPS = true;
+    </script>
+    <script type="text/javascript" src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="vis">
+    </div>
+    <div id="code">
+<div class="highlight"><pre><span class="p">(</span><span class="kd">ns </span><span class="nv">c2-cljs-examples.bullet</span>
+  <span class="p">(</span><span class="ss">:use-macros</span> <span class="p">[</span><span class="nv">c2.util</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">bind!</span><span class="p">]])</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">c2.core</span> <span class="ss">:as</span> <span class="nv">c2</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.event</span> <span class="ss">:as</span> <span class="nv">event</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.scale</span> <span class="ss">:as</span> <span class="nv">scale</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.svg</span> <span class="ss">:as</span> <span class="nv">svg</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">half</span> <span class="p">[</span><span class="nv">x</span><span class="p">]</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">x</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">crisp</span>
+  <span class="p">[</span><span class="nv">shape-attrs</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">assoc </span><span class="nv">shape-attrs</span> <span class="ss">:shape-rendering</span> <span class="s">&quot;crispEdges&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">bullet</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">bar-width</span> <span class="mi">770</span>
+        <span class="nv">group-height</span> <span class="mi">56</span>
+        <span class="nv">range-height</span> <span class="mi">40</span>
+        <span class="nv">group-gutter</span> <span class="p">(</span><span class="nf">half</span> <span class="p">(</span><span class="nb">- </span><span class="nv">group-height</span> <span class="nv">range-height</span><span class="p">))</span>
+        <span class="nv">measurement-height</span> <span class="mi">15</span>
+        <span class="nv">marker-height</span> <span class="mi">20</span>
+        <span class="nv">marker-width</span> <span class="mi">2</span>
+        <span class="nv">label-margin</span> <span class="mi">150</span>
+        <span class="nv">title-size</span> <span class="mi">18</span>
+        <span class="nv">subtitle-size</span> <span class="mi">12</span>
+        <span class="nv">text-gutter</span> <span class="mi">8</span>
+        <span class="nv">style</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;body { background-color: #222222 }&quot;</span>
+                   <span class="s">&quot;.bullet { font: &quot;</span> <span class="nv">subtitle-size</span> <span class="s">&quot;px \&quot;Helvetica Neue\&quot;,</span>
+<span class="s">                                                    Helvetica, sans-serif }&quot;</span>
+                   <span class="s">&quot;.bullet .label { fill: white; text-anchor: end }&quot;</span>
+                   <span class="s">&quot;.bullet .marker { stroke: black; stroke-width: 2px }&quot;</span>
+                   <span class="s">&quot;.bullet .tick line { stroke: #666; stroke-width: .5px }&quot;</span>
+                   <span class="s">&quot;.bullet .range.s0 { fill: #eee }&quot;</span>
+                   <span class="s">&quot;.bullet .range.s1 { fill: #cacaca }&quot;</span>
+                   <span class="s">&quot;.bullet .range.s2 { fill: #a3a3a3 }&quot;</span>
+                   <span class="s">&quot;.bullet .measurement.s0 { fill: #9fb6dc }&quot;</span>
+                   <span class="s">&quot;.bullet .measurement.s1 { fill: steelblue }&quot;</span>
+                   <span class="s">&quot;.bullet .title { font-size: &quot;</span> <span class="nv">title-size</span> <span class="s">&quot;px; font-weight: bold }&quot;</span>
+                   <span class="s">&quot;.bullet .subtitle { fill: #999 }&quot;</span><span class="p">)</span>
+        <span class="nv">data</span> <span class="p">[{</span><span class="ss">:metric</span> <span class="s">&quot;Revenue&quot;</span>, <span class="ss">:units</span> <span class="s">&quot;USD in thousands&quot;</span>
+               <span class="ss">:ranges</span> <span class="p">[</span><span class="mi">150</span> <span class="mi">225</span> <span class="mi">300</span><span class="p">]</span>, <span class="ss">:measurements</span> <span class="p">[</span><span class="mi">220</span> <span class="mi">270</span><span class="p">]</span>, <span class="ss">:markers</span> <span class="p">[</span><span class="mi">250</span><span class="p">]}</span>
+              <span class="p">{</span><span class="ss">:metric</span> <span class="s">&quot;Profit&quot;</span>, <span class="ss">:units</span> <span class="s">&quot;%&quot;</span>
+               <span class="ss">:ranges</span> <span class="p">[</span><span class="mi">20</span> <span class="mi">25</span> <span class="mi">30</span><span class="p">]</span>, <span class="ss">:measurements</span> <span class="p">[</span><span class="mi">21</span> <span class="mi">23</span><span class="p">]</span>, <span class="ss">:markers</span> <span class="p">[</span><span class="mi">26</span><span class="p">]}</span>
+              <span class="p">{</span><span class="ss">:metric</span> <span class="s">&quot;Order Size&quot;</span>, <span class="ss">:units</span> <span class="s">&quot;USD average&quot;</span>
+               <span class="ss">:ranges</span> <span class="p">[</span><span class="mi">350</span> <span class="mi">500</span> <span class="mi">600</span><span class="p">]</span>, <span class="ss">:measurements</span> <span class="p">[</span><span class="mi">100</span> <span class="mi">320</span><span class="p">]</span>, <span class="ss">:markers</span> <span class="p">[</span><span class="mi">550</span><span class="p">]}</span>
+              <span class="p">{</span><span class="ss">:metric</span> <span class="s">&quot;New Customers&quot;</span>, <span class="ss">:units</span> <span class="s">&quot;count&quot;</span>
+               <span class="ss">:ranges</span> <span class="p">[</span><span class="mi">1400</span> <span class="mi">2000</span> <span class="mi">2500</span><span class="p">]</span>,
+               <span class="ss">:measurements</span> <span class="p">[</span><span class="mi">1000</span> <span class="mi">1650</span><span class="p">]</span>, <span class="ss">:markers</span> <span class="p">[</span><span class="mi">2100</span><span class="p">]}</span>
+              <span class="p">{</span><span class="ss">:metric</span> <span class="s">&quot;Satisfaction&quot;</span>, <span class="ss">:units</span> <span class="s">&quot;out of 5&quot;</span>
+               <span class="ss">:ranges</span> <span class="p">[</span><span class="mf">3.5</span> <span class="mf">4.25</span> <span class="mi">5</span><span class="p">]</span>, <span class="ss">:measurements</span> <span class="p">[</span><span class="mf">3.2</span> <span class="mf">4.7</span><span class="p">]</span>, <span class="ss">:markers</span> <span class="p">[</span><span class="mf">4.4</span><span class="p">]}]]</span>
+    <span class="p">(</span><span class="nf">bind!</span>
+      <span class="s">&quot;#vis&quot;</span>
+      <span class="p">[</span><span class="ss">:div#vis</span> <span class="p">[</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:type</span> <span class="s">&quot;text/css&quot;</span><span class="p">}</span> <span class="nv">style</span><span class="p">]</span>
+
+       <span class="c1">;; the containing SVG element</span>
+       <span class="p">[</span><span class="ss">:svg#main</span> <span class="p">{</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:display</span> <span class="s">&quot;block&quot;</span> <span class="ss">:margin</span> <span class="s">&quot;auto&quot;</span>
+                           <span class="ss">:width</span> <span class="mi">960</span>, <span class="ss">:height</span> <span class="p">(</span><span class="nb">* </span><span class="p">(</span><span class="nb">count </span><span class="nv">data</span><span class="p">)</span> <span class="nv">group-height</span><span class="p">)}}</span>
+
+        <span class="p">(</span><span class="nf">c2/unify</span>
+          <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="nv">data</span><span class="p">)</span>
+          <span class="p">(</span><span class="k">fn </span><span class="p">[[</span><span class="nv">i</span> <span class="p">{</span><span class="ss">:keys</span> <span class="p">[</span><span class="nv">metric</span> <span class="nv">units</span> <span class="nv">ranges</span> <span class="nv">measurements</span> <span class="nv">markers</span><span class="p">]}]]</span>
+            <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">rightmost</span> <span class="p">(</span><span class="nb">apply max </span><span class="p">(</span><span class="nb">concat </span><span class="nv">ranges</span> <span class="nv">measurements</span> <span class="nv">markers</span><span class="p">))</span>
+                  <span class="nv">sc</span> <span class="p">(</span><span class="nf">scale/linear</span> <span class="ss">:domain</span> <span class="p">[</span><span class="mi">0</span> <span class="nv">rightmost</span><span class="p">]</span>
+                                   <span class="ss">:range</span> <span class="p">[</span><span class="mi">0</span> <span class="nv">bar-width</span><span class="p">])]</span>
+
+              <span class="c1">;; wrapper group for each chart &amp; label</span>
+              <span class="p">[</span><span class="ss">:g.bullet</span>
+               <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="mi">0</span> <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span> <span class="nv">group-height</span><span class="p">)</span>
+                                                <span class="nv">group-gutter</span><span class="p">)])}</span>
+
+               <span class="c1">;; the text label</span>
+               <span class="p">[</span><span class="ss">:g.label</span>
+                <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[(</span><span class="nb">- </span><span class="nv">label-margin</span> <span class="nv">text-gutter</span><span class="p">)</span>
+                                            <span class="nv">title-size</span><span class="p">])}</span>
+                <span class="p">[</span><span class="ss">:text.title</span> <span class="nv">metric</span><span class="p">]</span>
+                <span class="p">[</span><span class="ss">:text.subtitle</span> <span class="p">{</span><span class="ss">:dy</span> <span class="s">&quot;1.2em&quot;</span><span class="p">}</span> <span class="nv">units</span><span class="p">]]</span>
+
+               <span class="c1">;; the rects making up the chart itself</span>
+               <span class="p">[</span><span class="ss">:g.chart</span> <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="nv">label-margin</span> <span class="mi">0</span><span class="p">])}</span>
+
+                <span class="c1">;; the grey rects denoting range bins</span>
+                <span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">j</span> <span class="nv">r</span><span class="p">]</span> <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="p">(</span><span class="nb">sort &gt; </span><span class="nv">ranges</span><span class="p">))]</span>
+                  <span class="p">[</span><span class="ss">:rect</span> <span class="p">(</span><span class="nf">crisp</span> <span class="p">{</span><span class="ss">:class</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;range s&quot;</span> <span class="nv">j</span><span class="p">)</span>
+                                 <span class="ss">:width</span> <span class="p">(</span><span class="nf">sc</span> <span class="nv">r</span><span class="p">)</span>, <span class="ss">:height</span> <span class="nv">range-height</span><span class="p">})])</span>
+
+                <span class="c1">;; the thin blue rects denoting measurements</span>
+                <span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">j</span> <span class="nv">m</span><span class="p">]</span> <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="p">(</span><span class="nb">sort &gt; </span><span class="nv">measurements</span><span class="p">))]</span>
+                  <span class="p">[</span><span class="ss">:rect</span> <span class="p">(</span><span class="nf">crisp</span>
+                           <span class="p">{</span><span class="ss">:class</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;measurement s&quot;</span> <span class="nv">j</span><span class="p">)</span>
+                            <span class="ss">:width</span> <span class="p">(</span><span class="nf">sc</span> <span class="nv">m</span><span class="p">)</span>, <span class="ss">:height</span> <span class="nv">measurement-height</span>
+                            <span class="ss">:y</span> <span class="p">(</span><span class="nf">half</span> <span class="p">(</span><span class="nb">- </span><span class="nv">range-height</span> <span class="nv">measurement-height</span><span class="p">))})])</span>
+
+                <span class="c1">;; the little black goal markers</span>
+                <span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">j</span> <span class="nv">m</span><span class="p">]</span> <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="p">(</span><span class="nb">sort &gt; </span><span class="nv">markers</span><span class="p">))]</span>
+                  <span class="p">[</span><span class="ss">:rect.marker</span>
+                   <span class="p">(</span><span class="nf">crisp</span>
+                     <span class="p">{</span><span class="ss">:x</span> <span class="p">(</span><span class="nf">sc</span> <span class="nv">m</span><span class="p">)</span>, <span class="ss">:y</span> <span class="p">(</span><span class="nf">half</span> <span class="p">(</span><span class="nb">- </span><span class="nv">range-height</span> <span class="nv">marker-height</span><span class="p">))</span>
+                      <span class="ss">:width</span> <span class="nv">marker-width</span>, <span class="ss">:height</span> <span class="nv">marker-height</span><span class="p">})])]])))]])))</span>
+</pre></div>
+    </div>
+    <script type="text/javascript">
+      c2_cljs_examples.bullet.bullet();
+    </script>
+  </body>
+</html>

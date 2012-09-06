@@ -1,0 +1,267 @@
+<html>
+  <head>
+    <title>Pie Charts regarding the Congealed Remains of an Ancient Disk of Dust</title>
+    <link href='http://fonts.googleapis.com/css?family=Electrolize' rel='stylesheet' type='text/css'>
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <link href="css/pygments.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript">
+      var CLOSURE_NO_DEPS = true;
+    </script>
+    <script type="text/javascript" src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="vis">
+    </div>
+    <div id="code">
+<div class="highlight"><pre><span class="p">(</span><span class="kd">ns </span><span class="nv">c2-cljs-examples.space-pie</span>
+  <span class="p">(</span><span class="ss">:use-macros</span> <span class="p">[</span><span class="nv">c2.util</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">bind!</span><span class="p">]])</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">c2.core</span> <span class="ss">:as</span> <span class="nv">c2</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.event</span> <span class="ss">:as</span> <span class="nv">event</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.svg</span> <span class="ss">:as</span> <span class="nv">svg</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">clojure.string</span> <span class="ss">:as</span> <span class="nv">str</span><span class="p">])</span>
+  <span class="p">(</span><span class="ss">:use</span> <span class="p">[</span><span class="nv">c2.layout.partition</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">partition</span><span class="p">]]</span>
+        <span class="p">[</span><span class="nv">c2.maths</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">sin</span> <span class="nv">cos</span> <span class="nv">Tau</span><span class="p">]]))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; A General Utility Not Yet in C2</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="kd">defn- </span><span class="nv">deg</span> <span class="p">[</span><span class="nv">rad</span><span class="p">]</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">rad</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">Tau</span><span class="p">)</span>, <span class="p">(</span><span class="nb">* </span><span class="mi">360</span><span class="p">)))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Utilities Specific to our Data</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="kd">defn- </span><span class="nv">title-case</span>
+  <span class="s">&quot;Dumb title case, which capitalizes every whitespace-separated word. Good</span>
+<span class="s">  enough for our data!&quot;</span>
+  <span class="p">[</span><span class="nv">s</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">s</span>
+    <span class="p">(</span><span class="nf">str/replace</span> <span class="sc">\-</span> <span class="sc">\s</span><span class="nv">pace</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">str/split</span> <span class="o">#</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">-&gt;&gt;</span>
+      <span class="p">(</span><span class="nb">map </span><span class="nv">str/capitalize</span><span class="p">)</span>
+      <span class="p">(</span><span class="nf">str/join</span> <span class="s">&quot; &quot;</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="kd">defn- </span><span class="nv">keyword-&gt;css-class</span>
+  <span class="s">&quot;This converts the keywords of the mass maps we def below to css class names,</span>
+<span class="s">  and its behavior is undefined for any other inputs. It relies on the fact that</span>
+<span class="s">  the only non-css-safe thing that appears in those keywords is the apostrophe</span>
+<span class="s">  in the keyword :earth&#39;s-moon.&quot;</span>
+  <span class="p">[</span><span class="nv">s</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">.replace</span> <span class="nv">s</span> <span class="s">&quot;&#39;&quot;</span> <span class="s">&quot;&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">color-&gt;css</span>
+  <span class="p">[[</span><span class="nv">entity</span> <span class="nv">color</span><span class="p">]]</span>
+  <span class="p">(</span><span class="nb">str </span><span class="s">&quot;.&quot;</span> <span class="p">(</span><span class="nf">keyword-&gt;css-class</span> <span class="p">(</span><span class="nb">name </span><span class="nv">entity</span><span class="p">))</span> <span class="s">&quot; {fill: &quot;</span> <span class="p">(</span><span class="nb">name </span><span class="nv">color</span><span class="p">)</span> <span class="s">&quot;}&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">colors-&gt;css</span>
+  <span class="p">[</span><span class="nv">colors</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">apply str </span><span class="p">(</span><span class="nb">map </span><span class="nv">color-&gt;css</span> <span class="nv">colors</span><span class="p">)))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Our Color Palette Function</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">the-palette</span>
+  <span class="s">&quot;Derived from Cynthia Brewer&#39;s color brewer; all blemishes my own.</span>
+<span class="s">  http://colorbrewer2.org&quot;</span>
+  <span class="p">{</span><span class="ss">:blue</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#174d69&quot;</span>, <span class="ss">:light</span> <span class="s">&quot;#2a86d2&quot;</span><span class="p">}</span>
+   <span class="ss">:green</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#66a61e&quot;</span>, <span class="ss">:dark</span> <span class="s">&quot;#376b00&quot;</span><span class="p">}</span>
+   <span class="ss">:grey</span> <span class="p">{</span><span class="ss">:dark</span> <span class="s">&quot;#606060&quot;</span>, <span class="ss">:light</span> <span class="s">&quot;#999999&quot;</span><span class="p">}</span>
+   <span class="ss">:orange</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#d95f02&quot;</span>, <span class="ss">:dark</span> <span class="s">&quot;#923700&quot;</span> <span class="p">}</span>
+   <span class="ss">:pink</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#e7298a&quot;</span>, <span class="ss">:dark</span> <span class="s">&quot;#97004f&quot;</span><span class="p">}</span>
+   <span class="ss">:purple</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#7570b3&quot;</span>, <span class="ss">:dark</span> <span class="s">&quot;#36298d&quot;</span>, <span class="ss">:darkest</span> <span class="s">&quot;#2f0058&quot;</span><span class="p">}</span>
+   <span class="ss">:teal</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#1b9e77&quot;</span><span class="p">}</span>
+   <span class="ss">:white</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#dbdbdb&quot;</span><span class="p">}</span>
+   <span class="ss">:yellow</span> <span class="p">{</span><span class="ss">:base</span> <span class="s">&quot;#e6ab02&quot;</span>, <span class="ss">:dark</span> <span class="s">&quot;#a47400&quot;</span><span class="p">}})</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">palette</span>
+  <span class="s">&quot;Takes a keyword specifying a color in the palette map defined above, with an</span>
+<span class="s">  optional preceding modifier that must be defined for that color.&quot;</span>
+  <span class="p">([</span><span class="nv">color</span><span class="p">]</span>
+   <span class="p">(</span><span class="nf">palette</span> <span class="ss">:base</span> <span class="nv">color</span><span class="p">))</span>
+  <span class="p">([</span><span class="nv">modifier</span> <span class="nv">color</span><span class="p">]</span>
+   <span class="p">{</span><span class="ss">:pre</span> <span class="p">[(</span><span class="nb">contains? </span><span class="nv">the-palette</span> <span class="nv">color</span><span class="p">)</span>
+          <span class="p">(</span><span class="nb">contains? </span><span class="p">(</span><span class="nf">color</span> <span class="nv">the-palette</span><span class="p">)</span> <span class="nv">modifier</span><span class="p">)]}</span>
+   <span class="p">(</span><span class="nf">get-in</span> <span class="nv">the-palette</span> <span class="p">[</span><span class="nv">color</span> <span class="nv">modifier</span><span class="p">])))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Masses of Various Bodies in the Solar System</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">stars</span> <span class="p">{</span><span class="ss">:the-sun</span> <span class="mf">1.9884</span><span class="nv">e30</span><span class="p">})</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">planets</span> <span class="p">{</span><span class="ss">:mercury</span> <span class="mf">3.301</span><span class="nv">e23</span>
+              <span class="ss">:venus</span>   <span class="mf">4.867</span><span class="nv">e24</span>
+              <span class="ss">:earth</span>   <span class="mf">5.972</span><span class="nv">e24</span>
+              <span class="ss">:mars</span>    <span class="mf">6.419</span><span class="nv">e23</span>
+              <span class="ss">:jupiter</span> <span class="mf">1.899</span><span class="nv">e27</span>
+              <span class="ss">:saturn</span>  <span class="mf">5.685</span><span class="nv">e26</span>
+              <span class="ss">:uranus</span>  <span class="mf">8.682</span><span class="nv">e25</span>
+              <span class="ss">:neptune</span> <span class="mf">1.024</span><span class="nv">e26</span><span class="p">})</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">other-bodies</span> <span class="p">{</span><span class="ss">:ganymede</span> <span class="mf">1.482</span><span class="nv">e23</span>
+                   <span class="ss">:titan</span> <span class="mf">1.345</span><span class="nv">e23</span>
+                   <span class="ss">:callisto</span> <span class="mf">1.076</span><span class="nv">e23</span>
+                   <span class="ss">:io</span> <span class="mf">8.93</span><span class="nv">e22</span>
+                   <span class="ss">:earth&#39;s-moon</span> <span class="mf">7.35</span><span class="nv">e22</span>
+                   <span class="ss">:europa</span> <span class="mf">4.8</span><span class="nv">e22</span>
+                   <span class="ss">:triton</span> <span class="mf">2.15</span><span class="nv">e22</span>
+                   <span class="ss">:eris</span> <span class="mf">1.67</span><span class="nv">e22</span>
+                   <span class="ss">:pluto</span> <span class="mf">1.471</span><span class="nv">e22</span>
+                   <span class="ss">:haumea</span> <span class="mf">4.006</span><span class="nv">e21</span>
+                   <span class="ss">:titania</span> <span class="mf">3.526</span><span class="nv">e21</span>
+                   <span class="ss">:oberon</span> <span class="mf">3.014</span><span class="nv">e21</span>
+                   <span class="ss">:makemake</span> <span class="mi">3</span><span class="nv">e21</span>
+                   <span class="ss">:rhea</span> <span class="mf">2.3166</span><span class="nv">e21</span>
+                   <span class="ss">:iapetus</span> <span class="mf">1.937</span><span class="nv">e21</span>
+                   <span class="ss">:quaoar</span> <span class="mf">1.6</span><span class="nv">e21</span><span class="p">})</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Utilities for Defining Charts from the Mass Data</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">sum-mass</span> <span class="p">[</span><span class="nv">mass-map</span><span class="p">]</span> <span class="p">(</span><span class="nb">apply + </span><span class="p">(</span><span class="nb">vals </span><span class="nv">mass-map</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">format-data</span>
+  <span class="p">[</span><span class="nv">m</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">b</span> <span class="nv">mass</span><span class="p">]</span> <span class="p">(</span><span class="nb">sort-by second </span><span class="nv">m</span><span class="p">)]</span>
+    <span class="p">{</span><span class="ss">:name</span> <span class="p">(</span><span class="nb">name </span><span class="nv">b</span><span class="p">)</span>, <span class="ss">:mass</span> <span class="nv">mass</span><span class="p">}))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Charts from the Mass Data</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">summary</span>
+  <span class="p">{</span><span class="ss">:name</span> <span class="s">&quot;The Solar System by Mass&quot;</span>
+   <span class="ss">:children</span> <span class="p">(</span><span class="nf">format-data</span>
+               <span class="p">{</span><span class="ss">:the-sun</span> <span class="p">(</span><span class="ss">:the-sun</span> <span class="nv">stars</span><span class="p">)</span>
+                <span class="ss">:everything-else</span> <span class="p">(</span><span class="nf">sum-mass</span> <span class="p">(</span><span class="nb">merge </span><span class="nv">planets</span> <span class="nv">other-bodies</span><span class="p">))})</span>
+   <span class="ss">:colors</span> <span class="p">{</span><span class="ss">:the-sun</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:yellow</span><span class="p">)</span>
+            <span class="ss">:everything-else</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:white</span><span class="p">)}})</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">no-sun</span>
+  <span class="p">{</span><span class="ss">:name</span> <span class="s">&quot;Excluding the Sun&quot;</span>
+   <span class="ss">:children</span> <span class="p">(</span><span class="nf">format-data</span>
+               <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">planets</span>
+                 <span class="p">(</span><span class="nb">dissoc </span><span class="ss">:mars</span> <span class="ss">:mercury</span><span class="p">)</span> <span class="c1">; these two are too small to see</span>
+                 <span class="p">(</span><span class="nb">assoc </span><span class="ss">:all-lesser-bodies</span>
+                        <span class="p">(</span><span class="nf">sum-mass</span> <span class="p">(</span><span class="nb">merge </span><span class="p">(</span><span class="nb">select-keys </span><span class="nv">planets</span> <span class="p">[</span><span class="ss">:mars</span> <span class="ss">:mercury</span><span class="p">])</span>
+                                         <span class="nv">other-bodies</span><span class="p">)))))</span>
+   <span class="ss">:colors</span> <span class="p">{</span><span class="ss">:jupiter</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:green</span><span class="p">)</span>
+            <span class="ss">:saturn</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:orange</span><span class="p">)</span>
+            <span class="ss">:neptune</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:purple</span><span class="p">)</span>
+            <span class="ss">:uranus</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:teal</span><span class="p">)</span>
+            <span class="ss">:earth</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:yellow</span><span class="p">)</span>
+            <span class="ss">:venus</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:pink</span><span class="p">)</span>
+            <span class="ss">:all-lesser-bodies</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:white</span><span class="p">)}})</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">no-planets</span>
+  <span class="p">{</span><span class="ss">:name</span> <span class="s">&quot;Also Excluding Planets&quot;</span>
+   <span class="ss">:children</span> <span class="p">(</span><span class="nf">format-data</span> <span class="nv">other-bodies</span><span class="p">)</span>
+   <span class="ss">:colors</span> <span class="p">{</span><span class="ss">:ganymede</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:purple</span><span class="p">)</span>
+            <span class="ss">:titan</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:orange</span><span class="p">)</span>
+            <span class="ss">:callisto</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:pink</span><span class="p">)</span>
+            <span class="ss">:io</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:green</span><span class="p">)</span>
+            <span class="ss">:earth&#39;s-moon</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:yellow</span><span class="p">)</span>
+            <span class="ss">:europa</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:teal</span><span class="p">)</span>
+            <span class="ss">:triton</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:purple</span><span class="p">)</span>
+            <span class="ss">:eris</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:orange</span><span class="p">)</span>
+            <span class="ss">:pluto</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:blue</span><span class="p">)</span>
+            <span class="ss">:haumea</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:pink</span><span class="p">)</span>
+            <span class="ss">:titania</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:green</span><span class="p">)</span>
+            <span class="ss">:oberon</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:yellow</span><span class="p">)</span>
+            <span class="ss">:makemake</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:light</span> <span class="ss">:grey</span><span class="p">)</span>
+            <span class="ss">:rhea</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:darkest</span> <span class="ss">:purple</span><span class="p">)</span>
+            <span class="ss">:iapetus</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:light</span> <span class="ss">:blue</span><span class="p">)</span>
+            <span class="ss">:quaoar</span> <span class="p">(</span><span class="nf">palette</span> <span class="ss">:dark</span> <span class="ss">:grey</span><span class="p">)}})</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">charts</span> <span class="p">[</span><span class="nv">summary</span> <span class="nv">no-sun</span> <span class="nv">no-planets</span><span class="p">])</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Define the CSS</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">style</span> <span class="p">(</span><span class="nb">str </span><span class="s">&quot;body { background-color: #222222 }&quot;</span>
+                <span class="s">&quot;path { fill: #222222; stroke: #dbdbdb; stroke-width: 2px }&quot;</span>
+                <span class="s">&quot;rect { stroke: #dbdbdb; stroke-width: 2px }&quot;</span>
+                <span class="s">&quot;text { fill: white }&quot;</span>
+                <span class="p">(</span><span class="nf">-&gt;&gt;</span> <span class="nv">charts</span>
+                  <span class="p">(</span><span class="nb">map </span><span class="ss">:colors</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nb">map </span><span class="nv">colors-&gt;css</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nb">apply </span><span class="nv">str</span><span class="p">))))</span>
+
+<span class="c1">;;</span>
+<span class="c1">;; Turn Those Data into Pictures!</span>
+<span class="c1">;;</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">space-pie</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">width</span> <span class="mi">840</span>
+        <span class="nv">radius</span> <span class="mi">300</span>
+        <span class="nv">margin</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">radius</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="nv">half-pie</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">radius</span> <span class="nv">margin</span><span class="p">)</span>
+        <span class="nv">pie-width</span> <span class="p">(</span><span class="nb">* </span><span class="mi">2</span> <span class="nv">half-pie</span><span class="p">)</span>
+        <span class="nv">title-size</span> <span class="mi">48</span>
+        <span class="nv">group-height</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">pie-width</span> <span class="nv">title-size</span> <span class="p">(</span><span class="nb">* </span><span class="mi">2</span> <span class="nv">margin</span><span class="p">))</span>
+        <span class="nv">make-slices</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">dm</span><span class="p">]</span>
+                      <span class="p">(</span><span class="nb">filter </span><span class="o">#</span><span class="p">(</span><span class="nb">= </span><span class="mi">1</span> <span class="p">(</span><span class="nf">get-in</span> <span class="nv">%</span> <span class="p">[</span><span class="ss">:partition</span> <span class="ss">:depth</span><span class="p">]))</span>
+                              <span class="p">(</span><span class="nf">partition</span> <span class="nv">dm</span> <span class="ss">:value</span> <span class="ss">:mass</span>, <span class="ss">:size</span> <span class="p">[</span><span class="nv">Tau</span> <span class="mi">1</span><span class="p">])))</span>
+
+        <span class="c1">;; a function for creating a slice of the pie chart</span>
+        <span class="nv">-&gt;slice</span> <span class="p">(</span><span class="k">fn </span><span class="p">[{</span><span class="nb">name </span><span class="ss">:name</span>, <span class="nv">mass</span> <span class="ss">:mass</span>, <span class="p">{</span><span class="ss">:keys</span> <span class="p">[</span><span class="nv">x</span> <span class="nv">dx</span><span class="p">]}</span> <span class="ss">:partition</span><span class="p">}]</span>
+                  <span class="p">[</span><span class="ss">:g.slice</span>
+                   <span class="p">[</span><span class="ss">:path</span> <span class="p">{</span><span class="ss">:class</span> <span class="p">(</span><span class="nf">keyword-&gt;css-class</span> <span class="nv">name</span><span class="p">)</span>
+                           <span class="ss">:d</span> <span class="p">(</span><span class="nf">svg/arc</span> <span class="ss">:outer-radius</span> <span class="nv">radius</span>
+                                       <span class="ss">:start-angle</span> <span class="p">(</span><span class="nb">* </span><span class="mi">-1</span> <span class="nv">x</span><span class="p">)</span>
+                                       <span class="ss">:end-angle</span>  <span class="p">(</span><span class="nb">* </span><span class="mi">-1</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">x</span> <span class="nv">dx</span><span class="p">)))}]])</span>
+
+        <span class="c1">;; a function for creating an entry in the legend</span>
+        <span class="nv">-&gt;legend</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i-max</span> <span class="p">[</span><span class="nv">i</span> <span class="p">{</span><span class="nb">name </span><span class="ss">:name</span><span class="p">}]]</span>
+                   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">text-size</span> <span class="mi">19</span>
+                         <span class="p">[</span><span class="nv">i</span> <span class="nv">i-max</span><span class="p">]</span> <span class="p">(</span><span class="nb">map inc </span><span class="p">[</span><span class="nv">i</span> <span class="nv">i-max</span><span class="p">])</span>
+                         <span class="nv">i-&gt;y</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">i</span><span class="p">]</span> <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span> <span class="nv">text-size</span> <span class="p">(</span><span class="nb">/ </span><span class="mi">3</span> <span class="mi">2</span><span class="p">))</span> <span class="nv">text-size</span><span class="p">))</span>
+                         <span class="nv">y-off</span> <span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="nf">i-&gt;y</span> <span class="nv">i-max</span><span class="p">)</span> <span class="p">(</span><span class="nf">i-&gt;y</span> <span class="nv">i</span><span class="p">))]</span>
+                     <span class="p">[</span><span class="ss">:g.legend-entry</span> <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="mi">0</span> <span class="nv">y-off</span><span class="p">])}</span>
+                      <span class="p">[</span><span class="ss">:rect</span> <span class="p">{</span><span class="ss">:class</span> <span class="p">(</span><span class="nf">keyword-&gt;css-class</span> <span class="nv">name</span><span class="p">)</span>
+                              <span class="ss">:width</span> <span class="nv">text-size</span>, <span class="ss">:height</span> <span class="nv">text-size</span>
+                              <span class="ss">:shape-rendering</span> <span class="s">&quot;crispEdges&quot;</span><span class="p">}]</span>
+                      <span class="p">[</span><span class="ss">:text</span> <span class="p">{</span><span class="ss">:x</span> <span class="p">(</span><span class="nb">* </span><span class="nv">text-size</span> <span class="mf">1.33</span><span class="p">)</span>, <span class="ss">:y</span> <span class="p">(</span><span class="nb">* </span><span class="nv">text-size</span> <span class="mf">0.85</span><span class="p">)</span>
+                              <span class="ss">:font-size</span> <span class="nv">text-size</span><span class="p">}</span>
+                       <span class="p">(</span><span class="nf">title-case</span> <span class="nv">name</span><span class="p">)]]))]</span>
+    <span class="p">(</span><span class="nf">bind!</span>
+      <span class="s">&quot;#vis&quot;</span>
+      <span class="p">[</span><span class="ss">:div#vis</span> <span class="p">[</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:type</span> <span class="s">&quot;text/css&quot;</span><span class="p">}</span> <span class="nv">style</span><span class="p">]</span>
+
+       <span class="c1">;; the containing SVG element</span>
+       <span class="p">[</span><span class="ss">:svg#main</span> <span class="p">{</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:display</span> <span class="s">&quot;block&quot;</span>, <span class="ss">:margin</span> <span class="s">&quot;auto&quot;</span>
+                           <span class="ss">:width</span> <span class="nv">width</span>, <span class="ss">:height</span> <span class="p">(</span><span class="nb">* </span><span class="nv">group-height</span>
+                                                    <span class="p">(</span><span class="nb">count </span><span class="nv">charts</span><span class="p">))}}</span>
+
+        <span class="p">(</span><span class="nb">for </span><span class="p">[[</span><span class="nv">i</span> <span class="nv">data</span><span class="p">]</span> <span class="p">(</span><span class="nb">map vector </span><span class="p">(</span><span class="nf">range</span><span class="p">)</span> <span class="nv">charts</span><span class="p">)]</span>
+          <span class="p">[</span><span class="ss">:g.figure</span> <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="mi">0</span> <span class="p">(</span><span class="nb">* </span><span class="nv">i</span> <span class="nv">group-height</span><span class="p">)])}</span>
+
+           <span class="c1">;; the title of the chart</span>
+           <span class="p">[</span><span class="ss">:text.title</span> <span class="p">{</span><span class="ss">:x</span> <span class="nv">margin</span>, <span class="ss">:y</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">title-size</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">margin</span> <span class="mi">4</span><span class="p">))</span>
+                         <span class="ss">:font-size</span> <span class="nv">title-size</span><span class="p">}</span>
+            <span class="p">(</span><span class="ss">:name</span> <span class="nv">data</span><span class="p">)]</span>
+
+           <span class="c1">;; the pie chart itself</span>
+           <span class="p">[</span><span class="ss">:g</span> <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="mi">0</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">margin</span> <span class="nv">title-size</span><span class="p">)])}</span>
+            <span class="p">[</span><span class="ss">:g.chart</span>
+             <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nb">str </span><span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="nv">half-pie</span> <span class="nv">half-pie</span><span class="p">])</span>
+                              <span class="p">(</span><span class="nf">svg/rotate</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">Tau</span> <span class="p">(</span><span class="nb">/ </span><span class="mi">4</span><span class="p">)</span>, <span class="p">(</span><span class="nb">* </span><span class="mi">-1</span><span class="p">)</span>, <span class="nv">deg</span><span class="p">)))}</span>
+             <span class="p">(</span><span class="nf">c2/unify</span> <span class="p">(</span><span class="nf">make-slices</span> <span class="nv">data</span><span class="p">)</span> <span class="nv">-&gt;slice</span><span class="p">)]</span>
+
+            <span class="c1">;; the chart&#39;s legend</span>
+            <span class="p">[</span><span class="ss">:g.legend</span>
+             <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[</span><span class="nv">pie-width</span> <span class="mi">0</span><span class="p">])}</span>
+             <span class="p">(</span><span class="nf">c2/unify</span> <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="p">(</span><span class="nf">make-slices</span> <span class="nv">data</span><span class="p">))</span>
+                       <span class="p">(</span><span class="nb">partial </span><span class="nv">-&gt;legend</span> <span class="p">(</span><span class="nb">count </span><span class="p">(</span><span class="nf">make-slices</span> <span class="nv">data</span><span class="p">))))]]])]])))</span>
+</pre></div>
+    </div>
+    <script type="text/javascript">
+      c2_cljs_examples.space_pie.space_pie();
+    </script>
+  </body>
+</html>

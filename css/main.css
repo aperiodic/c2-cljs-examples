@@ -1,0 +1,59 @@
+body {
+  background-color: #222222;
+  color: white;
+  font-family: 'Electrolize';
+}
+
+#container {
+  width: 840px;
+  margin: auto;
+  margin-top: 2em;
+}
+
+#container img {
+  border: 1px solid #a0a0a0;
+}
+
+#container img:hover {
+  border: 1px solid #0B8CB8;
+  box-shadow: inset rgba(0, 0, 0, 0.4) 0 0 12px,#085E7B 0 0 10px 1px;
+}
+
+#examples {
+  margin: auto;
+}
+
+.example {
+  float: left;
+  margin-right: 4em;
+}
+
+#space_pie {
+  margin-right: 0em;
+}
+
+.example h2 {
+  margin-bottom: 0.5em;
+}
+
+#vis {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+#code {
+  background-color: #121212;
+  font-size: 16px;
+
+  margin: auto;
+  margin-bottom: 2em;
+  padding: 0.65em;
+  padding-top: 0em;
+  padding-bottom: 0em;
+  width: 960px;
+}
+
+#code pre {
+  padding-top: 0.5em;
+  padding-bottom: 1em;
+}

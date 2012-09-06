@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <title>Boxes &amp; Whiskers</title>
+    <link href="css/main.css" rel="stylesheet" type="text/css">
+    <link href="css/pygments.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript">
+      var CLOSURE_NO_DEPS = true;
+    </script>
+    <script type="text/javascript" src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="vis">
+    </div>
+    <div id="code" class="highlight">
+<div class="highlight"><pre><span class="p">(</span><span class="kd">ns </span><span class="nv">c2-cljs-examples.boxplot</span>
+  <span class="p">(</span><span class="ss">:use-macros</span> <span class="p">[</span><span class="nv">c2.util</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">bind!</span><span class="p">]])</span>
+  <span class="p">(</span><span class="ss">:require</span> <span class="p">[</span><span class="nv">c2.core</span> <span class="ss">:as</span> <span class="nv">c2</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.event</span> <span class="ss">:as</span> <span class="nv">event</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.scale</span> <span class="ss">:as</span> <span class="nv">scale</span><span class="p">]</span>
+            <span class="p">[</span><span class="nv">c2.svg</span> <span class="ss">:as</span> <span class="nv">svg</span><span class="p">])</span>
+  <span class="p">(</span><span class="ss">:use</span> <span class="p">[</span><span class="nv">c2.maths</span> <span class="ss">:only</span> <span class="p">[</span><span class="nv">extent</span><span class="p">]]))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">crisp</span>
+  <span class="p">[</span><span class="nv">shape-attrs</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">assoc </span><span class="nv">shape-attrs</span> <span class="ss">:shape-rendering</span> <span class="s">&quot;crispEdges&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">boxplot</span> <span class="p">[]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">height</span> <span class="mi">500</span>
+        <span class="nv">width</span> <span class="mi">960</span>
+        <span class="nv">group-width</span> <span class="mi">30</span>
+        <span class="nv">box-width</span> <span class="mi">17</span>
+        <span class="nv">half-box-width</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">box-width</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="nv">bins</span> <span class="p">[</span><span class="ss">:q10</span> <span class="ss">:q15</span> <span class="ss">:q25</span> <span class="ss">:median</span> <span class="ss">:q75</span> <span class="ss">:q85</span> <span class="ss">:q90</span><span class="p">]</span>
+        <span class="nv">data</span> <span class="p">(</span><span class="nf">repeatedly</span>
+               <span class="p">(</span><span class="nb">quot </span><span class="nv">width</span> <span class="nv">group-width</span><span class="p">)</span>
+               <span class="o">#</span><span class="p">(</span><span class="nb">into </span><span class="p">{}</span> <span class="p">(</span><span class="nb">map </span><span class="nv">vector</span>
+                              <span class="nv">bins</span>
+                              <span class="p">(</span><span class="nb">sort </span><span class="p">(</span><span class="nb">take </span><span class="p">(</span><span class="nb">count </span><span class="nv">bins</span><span class="p">)</span> <span class="p">(</span><span class="nf">repeatedly</span> <span class="nv">rand</span><span class="p">))))))</span>
+        <span class="nv">scale</span> <span class="p">(</span><span class="nf">scale/linear</span> <span class="ss">:domain</span> <span class="p">(</span><span class="nf">extent</span> <span class="p">(</span><span class="nf">flatten</span> <span class="p">(</span><span class="nb">map vals </span><span class="nv">data</span><span class="p">)))</span>
+                            <span class="c1">;; range inverted because origin is at top of frame</span>
+                            <span class="ss">:range</span> <span class="p">[(</span><span class="nb">dec </span><span class="nv">height</span><span class="p">)</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="nv">box-width-line</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">y</span><span class="p">]</span> <span class="p">[</span><span class="ss">:line</span> <span class="p">(</span><span class="nf">crisp</span> <span class="p">{</span><span class="ss">:x1</span> <span class="mi">0</span>, <span class="ss">:x2</span> <span class="nv">box-width</span>
+                                              <span class="ss">:y1</span> <span class="nv">y</span>, <span class="ss">:y2</span> <span class="nv">y</span><span class="p">})])]</span>
+    <span class="p">(</span><span class="nf">bind!</span>
+      <span class="s">&quot;#vis&quot;</span>
+      <span class="p">[</span><span class="ss">:div#vis</span>
+
+       <span class="c1">;; inline CSS</span>
+       <span class="p">[</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:type</span> <span class="s">&quot;text/css&quot;</span><span class="p">}</span>
+        <span class="p">(</span><span class="nb">str </span><span class="s">&quot;body { background-color: #222222 }&quot;</span>
+             <span class="s">&quot;.box { fill: #222222; stroke: #cfcfcf }&quot;</span>
+             <span class="s">&quot;line { stroke: #cfcfcf }&quot;</span>
+             <span class="s">&quot;line.range { stroke-dasharray: 5,5 }&quot;</span><span class="p">)]</span>
+
+       <span class="c1">;; the containing SVG element</span>
+       <span class="p">[</span><span class="ss">:svg#main</span> <span class="p">{</span><span class="ss">:style</span> <span class="p">{</span><span class="ss">:display</span> <span class="s">&quot;block&quot;</span>, <span class="ss">:margin</span> <span class="s">&quot;auto&quot;</span>
+                           <span class="ss">:width</span> <span class="nv">width</span>, <span class="ss">:height</span> <span class="nv">height</span><span class="p">}}</span>
+
+        <span class="p">(</span><span class="nf">c2/unify</span>
+          <span class="p">(</span><span class="nf">map-indexed</span> <span class="nb">vector </span><span class="nv">data</span><span class="p">)</span>
+          <span class="p">(</span><span class="k">fn </span><span class="p">[[</span><span class="nv">i</span> <span class="p">{</span><span class="ss">:keys</span> <span class="p">[</span><span class="nv">q10</span> <span class="nv">q25</span> <span class="nv">median</span> <span class="nv">q75</span> <span class="nv">q90</span><span class="p">]}]]</span>
+
+            <span class="c1">;; a group for each box</span>
+            <span class="p">[</span><span class="ss">:g.boxplot</span> <span class="p">{</span><span class="ss">:transform</span> <span class="p">(</span><span class="nf">svg/translate</span> <span class="p">[(</span><span class="nb">inc </span><span class="p">(</span><span class="nb">* </span><span class="nv">i</span> <span class="nv">group-width</span><span class="p">))</span> <span class="mi">0</span><span class="p">])}</span>
+
+             <span class="c1">;; dashed line from the 10th percentile to the 90th</span>
+             <span class="c1">;; this goes under the box, but the box has a fill, so NBD</span>
+             <span class="p">[</span><span class="ss">:line.range</span> <span class="p">(</span><span class="nf">crisp</span> <span class="p">{</span><span class="ss">:x1</span> <span class="nv">half-box-width</span>, <span class="ss">:x2</span> <span class="nv">half-box-width</span>
+                                  <span class="ss">:y1</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q90</span><span class="p">)</span>, <span class="ss">:y2</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q10</span><span class="p">)})]</span>
+
+             <span class="c1">;; solid lines at the 10th &amp; 90th percentiles</span>
+             <span class="p">(</span><span class="nf">box-width-line</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q10</span><span class="p">))</span>
+             <span class="p">(</span><span class="nf">box-width-line</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q90</span><span class="p">))</span>
+
+             <span class="c1">;; box from 25th to 75th percentile</span>
+             <span class="p">[</span><span class="ss">:rect.box</span> <span class="p">(</span><span class="nf">crisp</span> <span class="p">{</span><span class="ss">:x</span> <span class="mi">0</span>, <span class="ss">:y</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q75</span><span class="p">)</span>
+                                <span class="ss">:width</span> <span class="nv">box-width</span>,
+                                <span class="ss">:height</span> <span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="nf">scale</span> <span class="nv">q25</span><span class="p">)</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">q75</span><span class="p">))})]</span>
+
+             <span class="c1">;; line across the box at the median</span>
+             <span class="p">(</span><span class="nf">box-width-line</span> <span class="p">(</span><span class="nf">scale</span> <span class="nv">median</span><span class="p">))]))]])))</span>
+</pre></div>
+    </div>
+    <script type="text/javascript">
+      c2_cljs_examples.boxplot.boxplot();
+    </script>
+  </body>
+</html>
