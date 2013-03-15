@@ -5,8 +5,10 @@ A few of the C2 demos, in clojurescript.
 ## Usage
 
 Compile the clojurescript with `lein cljsbuild once`, build the html by running
-`./dev/bin/htmlbuild.sh` from the project's root, and then open one of the html
+`./dev/bin/htmlbuild.sh` from the project's root (requires [pygments][pyg]) , and then open one of the html
 files in `resources/public` in your browser.
+
+[pyg]: http://pygments.org/download/
 
 Or just check out [the online version][ghp].
 
